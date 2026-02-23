@@ -155,8 +155,12 @@ async function main() {
             let command_output;
             try {
               command_output = child_process.execSync(args_object.command);
+              if (!command_output) {
+                command_output = "Command succeeded";
+              }
             } catch {
               command_output = "Error encountered while executing command"
+
             }
             messages_arr = messages_arr.concat([{
               role: "tool",
