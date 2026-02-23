@@ -24,57 +24,67 @@ async function main() {
     baseURL: baseURL,
   });
 
-  const response = await client.chat.completions.create({
-    model: "anthropic/claude-haiku-4.5",
-    messages: [{ role: "user", content: prompt }],
-    tools: [{
-      type: "function",
-      function: {
-        name: "Read",
-        description: "Read and return the contents of a file",
-        parameters: {
-          type: "object",
-          properties: {
-            file_path: {
-              type: "string",
-              description: "The path to the file to read"
-            }
-          },
-          required: ["file_path"]
-        }
-      }
-    }],
-  });
+  // Can't be fucked to list every single possible message type
+  let messages_arr: any = [{ role: "user", content: prompt }];
 
-  if (!response.choices || response.choices.length === 0) {
-    throw new Error("no choices in response");
-  }
-
-  // Execute 1st tool call in response (if it's "read")
-  const response_choice = response.choices.at(0);
-  if (response_choice) {
-    const response_msg = response_choice.message;
-    if (response_msg.tool_calls && response_msg.tool_calls.at(0)) {
-      const tool_call = response_msg.tool_calls.at(0) as OpenAI.Chat.Completions.ChatCompletionMessageFunctionToolCall;
-      if (tool_call.function.name.toLowerCase() === "read") {
-        let args_object;
-        try {
-          args_object = JSON.parse(tool_call.function.arguments)
-        } catch {
-          console.log("Invalid arguments for Read tool");
+  while (messages_arr.at(-1).tool_calls && messages_arr.at(-1).tool_calls.length > 0) {
+    const response = await client.chat.completions.create({
+      model: "anthropic/claude-haiku-4.5",
+      messages: messages_arr,
+      tools: [{
+        type: "function",
+        function: {
+          name: "Read",
+          description: "Read and return the contents of a file",
+          parameters: {
+            type: "object",
+            properties: {
+              file_path: {
+                type: "string",
+                description: "The path to the file to read"
+              }
+            },
+            required: ["file_path"]
+          }
         }
-        if (args_object.file_path) {
-          console.log(readFile(args_object.file_path));
+      }],
+    });
+
+    if (!response.choices || response.choices.length === 0) {
+      throw new Error("no choices in response");
+    }
+
+    const next_message = response.choices.at(0)!.message;
+    messages_arr = messages_arr.concat([next_message]);
+
+    // Execute tool calls in response
+    if (next_message.tool_calls) {
+      for (let i = 0; i < next_message.tool_calls.length; i++) {
+        const tool_call = next_message.tool_calls.at(i) as OpenAI.Chat.Completions.ChatCompletionMessageFunctionToolCall;
+        if (tool_call.function.name.toLowerCase() === "read") {
+          let args_object;
+          try {
+            args_object = JSON.parse(tool_call.function.arguments)
+          } catch {
+            console.log("Invalid arguments for Read tool");
+          }
+          if (args_object.file_path) {
+            const file_contents = readFile(args_object.file_path);
+            messages_arr = messages_arr.concat([{
+              role: "tool",
+              tool_call_id: tool_call.id,
+              content: file_contents
+            }]);
+          }
         }
       }
     }
+    
+    console.log(response.choices[0].message.content);
   }
 
   // You can use print statements as follows for debugging, they'll be visible when running tests.
-  console.error("Logs from your program will appear here!");
-
-  // TODO: Uncomment the lines below to pass the first stage
-  console.log(response.choices[0].message.content);
+  //console.error("Logs from your program will appear here!");
 }
 
 main();
