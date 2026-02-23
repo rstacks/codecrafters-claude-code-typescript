@@ -4,7 +4,7 @@ import fs from "fs";
 function readFile(filepath: string): void {
   const file = new File([], filepath);
   fs.readFile(filepath, "utf-8", (err, contents) => {
-    console.log(contents.trim());
+    console.log(contents.replaceAll('\n', ' ').trim());
   });
 }
 
