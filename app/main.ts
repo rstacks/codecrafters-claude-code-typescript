@@ -1,10 +1,8 @@
 import OpenAI from "openai";
 
-function readFile(filepath: string): string {
+async function readFile(filepath: string): Promise<string> {
   const file = new File([], filepath);
-  const reader = new FileReader();
-  reader.readAsText(file);
-  return reader.result as string;
+  return file.text();
 }
 
 async function main() {
@@ -65,7 +63,7 @@ async function main() {
           console.log("Invalid arguments for Read tool");
         }
         if (args_object.file_path) {
-          console.log(readFile(args_object.file_path));
+          console.log(await readFile(args_object.file_path));
         }
       }
     }
