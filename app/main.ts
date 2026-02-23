@@ -1,5 +1,6 @@
 import OpenAI from "openai";
 import fs from "fs";
+import child_process from "child_process";
 
 function readFile(filepath: string): string {
   return fs.readFileSync(filepath, "utf-8");
@@ -71,6 +72,23 @@ async function main() {
             }
           }
         }
+      },
+      {
+        type: "function",
+        function: {
+          name: "Bash",
+          description: "Execute a shell command",
+          parameters: {
+            type: "object",
+            required: ["command"],
+            properties: {
+              command: {
+                type: "string",
+                description: "The command to execute"
+              }
+            }
+          }
+        }
       }],
     });
 
@@ -122,6 +140,28 @@ async function main() {
               role: "tool",
               tool_call_id: tool_call.id,
               content: "Created the file"
+            }]);
+          }
+        }
+
+        if (tool_call.function.name.toLowerCase() === "bash") {
+          let args_object;
+          try {
+            args_object = JSON.parse(tool_call.function.arguments);
+          } catch {
+            console.log("Invalid arguments for Bash tool");
+          }
+          if (args_object.command) {
+            let command_output;
+            try {
+              command_output = child_process.execSync(args_object.command);
+            } catch {
+              command_output = "Error encountered while executing command"
+            }
+            messages_arr = messages_arr.concat([{
+              role: "tool",
+              tool_call_id: tool_call.id,
+              content: command_output
             }]);
           }
         }
