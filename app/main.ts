@@ -27,7 +27,7 @@ async function main() {
   // Can't be fucked to list every single possible message type
   let messages_arr: any = [{ role: "user", content: prompt }];
 
-  while (messages_arr.at(-1).tool_calls && messages_arr.at(-1).tool_calls.length > 0) {
+  do {
     const response = await client.chat.completions.create({
       model: "anthropic/claude-haiku-4.5",
       messages: messages_arr,
@@ -81,7 +81,7 @@ async function main() {
     }
     
     console.log(response.choices[0].message.content);
-  }
+  } while (messages_arr.at(-1).tool_calls && messages_arr.at(-1).tool_calls.length > 0);
 
   // You can use print statements as follows for debugging, they'll be visible when running tests.
   //console.error("Logs from your program will appear here!");
