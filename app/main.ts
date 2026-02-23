@@ -61,7 +61,7 @@ async function main() {
     if (next_message.tool_calls) {
       if (next_message.tool_calls.length === 0) {
         // End conversation
-        console.log(response.choices[0].message.content);
+        console.log(next_message.content);
         break;
       }
       for (let i = 0; i < next_message.tool_calls.length; i++) {
@@ -83,6 +83,10 @@ async function main() {
           }
         }
       }
+    } else {
+      // End conversation
+      console.log(response.choices[0].message.content);
+      break;
     }
   } while (true);
 
