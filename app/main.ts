@@ -1,11 +1,9 @@
 import OpenAI from "openai";
 import fs from "fs";
 
-function readFile(filepath: string): void {
+function readFile(filepath: string): string {
   const file = new File([], filepath);
-  fs.readFile(filepath, "utf-8", (err, contents) => {
-    console.log(contents);
-  });
+  return fs.readFileSync(filepath, "utf-8");
 }
 
 async function main() {
@@ -66,17 +64,17 @@ async function main() {
           console.log("Invalid arguments for Read tool");
         }
         if (args_object.file_path) {
-          readFile(args_object.file_path);
+          console.log(readFile(args_object.file_path));
         }
       }
     }
   }
 
   // You can use print statements as follows for debugging, they'll be visible when running tests.
-  //console.error("Logs from your program will appear here!");
+  console.error("Logs from your program will appear here!");
 
   // TODO: Uncomment the lines below to pass the first stage
-  //console.log(response.choices[0].message.content);
+  console.log(response.choices[0].message.content);
 }
 
 main();
