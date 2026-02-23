@@ -158,7 +158,7 @@ async function main() {
               if (!command_output) {
                 command_output = "Command succeeded";
               }
-            } catch {
+            } catch (e) {
               command_output = "Error encountered while executing command"
 
             }
