@@ -2,8 +2,11 @@ import OpenAI from "openai";
 import fs from "fs";
 
 function readFile(filepath: string): string {
-  const file = new File([], filepath);
   return fs.readFileSync(filepath, "utf-8");
+}
+
+function writeFile(filepath: string, content: string): void {
+  fs.writeFileSync(filepath, content);
 }
 
 async function main() {
@@ -47,6 +50,27 @@ async function main() {
             required: ["file_path"]
           }
         }
+      },
+      {
+        type: "function",
+        function: {
+          name: "Write",
+          description: "Write content to a file",
+          parameters: {
+            type: "object",
+            required: ["file_path", "content"],
+            properties: {
+              file_path: {
+                type: "string",
+                description: "The path of the file to write to"
+              },
+              content: {
+                type: "string",
+                description: "The content to write to the file"
+              }
+            }
+          }
+        }
       }],
     });
 
@@ -64,8 +88,10 @@ async function main() {
         console.log(next_message.content);
         break;
       }
+
       for (let i = 0; i < next_message.tool_calls.length; i++) {
         const tool_call = next_message.tool_calls.at(i) as OpenAI.Chat.Completions.ChatCompletionMessageFunctionToolCall;
+        
         if (tool_call.function.name.toLowerCase() === "read") {
           let args_object;
           try {
@@ -79,6 +105,23 @@ async function main() {
               role: "tool",
               tool_call_id: tool_call.id,
               content: file_contents
+            }]);
+          }
+        }
+
+        if (tool_call.function.name.toLowerCase() === "write") {
+          let args_object;
+          try {
+            args_object = JSON.parse(tool_call.function.arguments);
+          } catch {
+            console.log("Invalid arguments for Write tool");
+          }
+          if (args_object.file_path && args_object.content) {
+            writeFile(args_object.file_path, args_object.content);
+            messages_arr = messages_arr.concat([{
+              role: "tool",
+              tool_call_id: tool_call.id,
+              content: "Created the file"
             }]);
           }
         }
