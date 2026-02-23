@@ -26,7 +26,6 @@ async function main() {
 
   // Can't be fucked to list every single possible message type
   let messages_arr: any = [{ role: "user", content: prompt }];
-  let final_message_content: string | null;
 
   do {
     const response = await client.chat.completions.create({
@@ -60,6 +59,11 @@ async function main() {
 
     // Execute tool calls in response
     if (next_message.tool_calls) {
+      if (next_message.tool_calls.length === 0) {
+        // End conversation
+        console.log(response.choices[0].message.content);
+        break;
+      }
       for (let i = 0; i < next_message.tool_calls.length; i++) {
         const tool_call = next_message.tool_calls.at(i) as OpenAI.Chat.Completions.ChatCompletionMessageFunctionToolCall;
         if (tool_call.function.name.toLowerCase() === "read") {
@@ -80,11 +84,7 @@ async function main() {
         }
       }
     }
-    
-    final_message_content = response.choices[0].message.content;
-  } while (messages_arr.at(-1).tool_calls && messages_arr.at(-1).tool_calls.length > 0);
-  
-  console.log(final_message_content);
+  } while (true);
 
   // You can use print statements as follows for debugging, they'll be visible when running tests.
   //console.error("Logs from your program will appear here!");
