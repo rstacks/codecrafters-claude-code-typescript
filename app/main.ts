@@ -132,18 +132,20 @@ async function main() {
             console.log("Invalid arguments for Bash tool");
           }
           if (args_object.command) {
+            let command_output;
             try {
-              tool_output = child_process.execSync(args_object.command).toString();
+              command_output = child_process.execSync(args_object.command).toString();
             } catch {
-              tool_output = "Error encountered while executing command";
+              command_output = "Error encountered while executing command";
             }
+            tool_output = command_output.toString();
           }
         }
 
         messages_arr = messages_arr.concat([{
           role: "tool",
           tool_call_id: tool_call.id,
-          content: "FUCK YOU"
+          content: tool_output
         }]);
       }
     }
