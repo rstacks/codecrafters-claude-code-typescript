@@ -20,7 +20,7 @@ async function main() {
     baseURL: baseURL,
   });
 
-  let messages_arr: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [];
+  let messages_arr: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [{ role: "user", content: prompt }];
   let continue_conversation = true;
 
   do {
@@ -132,13 +132,11 @@ async function main() {
             console.log("Invalid arguments for Bash tool");
           }
           if (args_object.command) {
-            let command_output;
             try {
-              command_output = child_process.execSync(args_object.command).toString();
+              tool_output = child_process.execSync(args_object.command).toString();
             } catch {
-              command_output = "Error encountered while executing command";
+              tool_output = "Error encountered while executing command";
             }
-            tool_output = command_output.toString();
           }
         }
 
