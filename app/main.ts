@@ -143,7 +143,7 @@ async function main() {
         messages_arr = messages_arr.concat([{
           role: "tool",
           tool_call_id: tool_call.id,
-          content: tool_output
+          content: tool_output.toString()
         }]);
       }
     }
